@@ -2,7 +2,7 @@ services:
   - type: web
     name: school-backend
     env: node
-    region: sgp
+    region: singapore
     plan: standard
     buildCommand: npm install
     startCommand: node src/server.js
