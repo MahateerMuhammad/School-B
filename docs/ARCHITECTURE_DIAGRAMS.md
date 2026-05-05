@@ -1,0 +1,690 @@
+# Architecture Diagrams - Voucher System Updates
+
+## System Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    VOUCHER SYSTEM UPDATES                        │
+│                                                                  │
+│  Issue #3: Preview & Print Options                              │
+│  Issue #4: Per-Student Fee Overrides                           │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+        ┌─────────────────────────────────────────┐
+        │         NEW DATABASE TABLE              │
+        │                                         │
+        │    student_fee_overrides                │
+        │    ├── student_id                       │
+        │    ├── class_id                        │
+        │    ├── admission_fee (nullable)        │
+        │    ├── monthly_fee (nullable)          │
+        │    ├── paper_fund (nullable)           │
+        │    └── reason                          │
+        └─────────────────────────────────────────┘
+                              │
+                              ▼
+        ┌─────────────────────────────────────────┐
+        │      NEW API ENDPOINTS                  │
+        │                                         │
+        │  Fee Overrides:                         │
+        │  ├── POST   /student-fee-overrides     │
+        │  ├── GET    /student-fee-overrides     │
+        │  ├── GET    /student-fee-overrides/:id │
+        │  └── DELETE /student-fee-overrides/:id │
+        │                                         │
+        │  Voucher Preview & PDF:                 │
+        │  ├── POST /vouchers/preview-bulk       │
+        │  ├── POST /vouchers/generate-bulk-pdf  │
+        │  └── GET  /vouchers/:id/print          │
+        └─────────────────────────────────────────┘
+```
+
+---
+
+## Fee Override Flow
+
+### Student Admission with Custom Fee
+
+```
+┌──────────────┐
+│   FRONTEND   │
+└──────┬───────┘
+       │ 1. User fills form
+       │    - Name: Ahmad Ali
+       │    - Class: 1
+       │    - Custom Admission: 4000
+       │
+       ▼
+┌──────────────────────────────────────────┐
+│  POST /api/students                      │
+│  {                                       │
+│    name: "Ahmad Ali",                    │
+│    enrollment: { class_id: 1 }           │
+│  }                                       │
+└──────┬───────────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────────┐
+│  DATABASE                                 │
+│  students table                          │
+│  INSERT: id=1, name="Ahmad Ali"          │
+└──────┬───────────────────────────────────┘
+       │
+       ▼ Returns student_id = 1
+       │
+┌──────────────────────────────────────────┐
+│  POST /api/student-fee-overrides         │
+│  {                                       │
+│    student_id: 1,                        │
+│    class_id: 1,                          │
+│    admission_fee: 4000,                  │
+│    monthly_fee: null,                    │
+│    paper_fund: null,                     │
+│    reason: "Custom agreed"               │
+│  }                                       │
+└──────┬───────────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────────┐
+│  DATABASE                                 │
+│  student_fee_overrides table             │
+│  INSERT:                                  │
+│    student_id=1, class_id=1,             │
+│    admission_fee=4000,                   │
+│    monthly_fee=null,                     │
+│    paper_fund=null                       │
+└──────┬───────────────────────────────────┘
+       │
+       ▼
+┌──────────────┐
+│   SUCCESS    │
+│ Custom fee   │
+│   saved!     │
+└──────────────┘
+```
+
+---
+
+## Voucher Generation with Override
+
+### Before (Without Override)
+
+```
+Generate Voucher
+       │
+       ▼
+┌──────────────────────────────────────┐
+│ Get Class Fee Structure              │
+│ admission_fee: 5000                  │
+│ monthly_fee: 3000                    │
+│ paper_fund: 500                      │
+└──────┬───────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────┐
+│ Create Voucher Items                 │
+│ ADMISSION:    5000  ← Class default  │
+│ MONTHLY:      3000                   │
+│ PAPER_FUND:    500                   │
+│ ─────────────────                    │
+│ TOTAL:        8500                   │
+└──────────────────────────────────────┘
+```
+
+### After (With Override)
+
+```
+Generate Voucher for student_id=1
+       │
+       ▼
+┌──────────────────────────────────────┐
+│ Get Class Fee Structure              │
+│ admission_fee: 5000                  │
+│ monthly_fee: 3000                    │
+│ paper_fund: 500                      │
+└──────┬───────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────┐
+│ Check for Fee Override               │
+│ SELECT * FROM student_fee_overrides  │
+│ WHERE student_id=1 AND class_id=1    │
+└──────┬───────────────────────────────┘
+       │
+       ▼ Found override!
+┌──────────────────────────────────────┐
+│ Override Found:                      │
+│ admission_fee: 4000  ← CUSTOM        │
+│ monthly_fee: null    ← USE DEFAULT   │
+│ paper_fund: null     ← USE DEFAULT   │
+└──────┬───────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────┐
+│ Calculate Effective Fees             │
+│ admission: 4000 (override exists)    │
+│ monthly:   3000 (null = use default) │
+│ paper_fund: 500 (null = use default) │
+└──────┬───────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────┐
+│ Create Voucher Items                 │
+│ ADMISSION:    4000  ← Override! ✓    │
+│ MONTHLY:      3000  ← Default        │
+│ PAPER_FUND:    500  ← Default        │
+│ ─────────────────                    │
+│ TOTAL:        7500  ← Saved 1000!    │
+└──────────────────────────────────────┘
+```
+
+---
+
+## Preview → Generate Flow
+
+```
+┌──────────────┐
+│   FRONTEND   │
+│  User clicks │
+│  "Preview"   │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────────────────────────────────┐
+│  POST /api/vouchers/preview-bulk         │
+│  {                                       │
+│    class_id: 1,                          │
+│    month: "2026-02-01"                   │
+│  }                                       │
+└──────┬───────────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────────┐
+│  BACKEND LOGIC                           │
+│  1. Get all students in class            │
+│  2. For each student:                    │
+│     - Check fee override                 │
+│     - Calculate effective fees           │
+│     - Calculate arrears                  │
+│     - Calculate discounts                │
+│  3. Return preview (NO DB CHANGES)       │
+└──────┬───────────────────────────────────┘
+       │
+       ▼ Returns preview data
+       │
+┌──────────────────────────────────────────┐
+│  FRONTEND                                 │
+│  Display Preview Table:                  │
+│                                          │
+│  ┌────────────────────────────────────┐ │
+│  │ Student       Items         Total  │ │
+│  │────────────────────────────────────│ │
+│  │ Ahmad Ali     ADMISSION: 4000*     │ │
+│  │ (001)         MONTHLY: 3000        │ │
+│  │               PAPER: 500           │ │
+│  │                         Rs. 7500   │ │
+│  │────────────────────────────────────│ │
+│  │ Fatima        MONTHLY: 3000        │ │
+│  │ (002)         PAPER: 500           │ │
+│  │               ARREARS: 2000        │ │
+│  │                         Rs. 5500   │ │
+│  └────────────────────────────────────┘ │
+│                                          │
+│  * = Custom fee                          │
+│                                          │
+│  [Generate & Save] [Print Only] [Cancel]│
+└──────┬───────────────────────────────────┘
+       │
+       ├─► User clicks "Generate & Save"
+       │   │
+       │   ▼
+       │   POST /api/vouchers/generate-bulk
+       │   → Creates vouchers in database
+       │   → Returns created voucher IDs
+       │
+       ├─► User clicks "Print Only"
+       │   │
+       │   ▼
+       │   POST /api/vouchers/generate-bulk-pdf
+       │   → Generates PDF
+       │   → NO database changes
+       │   → Returns PDF file
+       │
+       └─► User clicks "Cancel"
+           → Go back to form
+```
+
+---
+
+## Print vs Download Flow
+
+### Print Flow (NEW)
+
+```
+┌──────────────┐
+│   FRONTEND   │
+│ User clicks  │
+│   "Print"    │
+└──────┬───────┘
+       │
+       ▼
+GET /api/vouchers/123/print
+       │
+       ▼
+┌──────────────────────────────────────────┐
+│  BACKEND                                  │
+│  1. Generate PDF                         │
+│  2. Set header:                          │
+│     Content-Disposition: inline          │
+│     (not attachment)                     │
+│  3. Return PDF                           │
+└──────┬───────────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────────┐
+│  BROWSER                                  │
+│  Opens PDF in new tab                    │
+│  Browser's print dialog appears          │
+│  User can print directly                 │
+└──────────────────────────────────────────┘
+```
+
+### Download Flow (EXISTING)
+
+```
+┌──────────────┐
+│   FRONTEND   │
+│ User clicks  │
+│  "Download"  │
+└──────┬───────┘
+       │
+       ▼
+GET /api/vouchers/123/pdf
+       │
+       ▼
+┌──────────────────────────────────────────┐
+│  BACKEND                                  │
+│  1. Generate PDF                         │
+│  2. Set header:                          │
+│     Content-Disposition: attachment      │
+│     filename="voucher-123.pdf"           │
+│  3. Return PDF                           │
+└──────┬───────────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────────┐
+│  BROWSER                                  │
+│  Downloads file to computer              │
+│  Saves as "voucher-123.pdf"              │
+└──────────────────────────────────────────┘
+```
+
+---
+
+## Database Schema Relationships
+
+```
+┌─────────────────┐
+│    students     │
+│─────────────────│
+│ id (PK)         │◄──────┐
+│ name            │       │
+│ roll_no         │       │
+│ class_id        │       │
+└─────────────────┘       │
+                          │
+                          │ student_id (FK)
+                          │
+                  ┌───────┴──────────────────┐
+                  │ student_fee_overrides    │
+                  │──────────────────────────│
+                  │ id (PK)                  │
+                  │ student_id (FK) ─────────┘
+                  │ class_id (FK) ───────────┐
+                  │ admission_fee (nullable) │
+                  │ monthly_fee (nullable)   │
+                  │ paper_fund (nullable)    │
+                  │ reason                   │
+                  │ applied_by (FK)          │
+                  │ created_at               │
+                  │                          │
+                  │ UNIQUE(student_id,       │
+                  │        class_id)         │
+                  └──────────────────────────┘
+                          │ class_id (FK)
+                          │
+                          ▼
+                  ┌─────────────────┐
+                  │    classes      │
+                  │─────────────────│
+                  │ id (PK)         │
+                  │ name            │
+                  └─────────────────┘
+```
+
+---
+
+## Fee Calculation Logic
+
+```
+┌─────────────────────────────────────────────────────┐
+│          CALCULATE EFFECTIVE FEES                    │
+│                                                      │
+│  FOR EACH FEE TYPE (admission, monthly, paper):     │
+│                                                      │
+│  1. Check Override                                  │
+│     ┌──────────────────────────────────┐           │
+│     │ Does override exist?              │           │
+│     └────┬─────────────────────┬────────┘           │
+│          │ YES                 │ NO                 │
+│          ▼                     ▼                    │
+│     ┌──────────────┐      ┌──────────────┐         │
+│     │ Is it null?  │      │ Use class    │         │
+│     └───┬────┬─────┘      │ default      │         │
+│         │YES │NO          └──────────────┘         │
+│         │    │                                      │
+│         │    ▼                                      │
+│         │ ┌──────────────┐                         │
+│         │ │ Use override │                         │
+│         │ │ value        │                         │
+│         │ └──────────────┘                         │
+│         │                                           │
+│         ▼                                           │
+│    ┌──────────────┐                                │
+│    │ Use class    │                                │
+│    │ default      │                                │
+│    └──────────────┘                                │
+│                                                      │
+│  Examples:                                          │
+│  ─────────────────────────────────────────          │
+│  Override = null    → Use class default (5000)     │
+│  Override = 4000    → Use 4000                     │
+│  Override = 0       → Use 0 (free)                 │
+│  No override record → Use class default (5000)     │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## User Interface Structure
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    MAIN APPLICATION                          │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+        ┌─────────────────────────────────────────┐
+        │         STUDENT MANAGEMENT              │
+        └─────────────────────────────────────────┘
+                              │
+                ┌─────────────┼─────────────┐
+                │             │             │
+                ▼             ▼             ▼
+        ┌──────────┐  ┌──────────┐  ┌──────────┐
+        │ Admission│  │  Details │  │   List   │
+        │   Form   │  │   Page   │  │   Page   │
+        └────┬─────┘  └────┬─────┘  └──────────┘
+             │             │
+             │             │
+  ┌──────────┴─────────────┴──────────────┐
+  │                                        │
+  │  ADD: Fee Override Section             │
+  │  ┌──────────────────────────────────┐ │
+  │  │ Class Defaults Display           │ │
+  │  │ ☐ Set Custom Fees                │ │
+  │  │   ├─ Admission Fee [____]        │ │
+  │  │   ├─ Monthly Fee [____]          │ │
+  │  │   ├─ Paper Fund [____]           │ │
+  │  │   └─ Reason [_____________]      │ │
+  │  └──────────────────────────────────┘ │
+  └────────────────────────────────────────┘
+                              
+        ┌─────────────────────────────────────────┐
+        │         VOUCHER MANAGEMENT              │
+        └─────────────────────────────────────────┘
+                              │
+                ┌─────────────┼─────────────┐
+                │             │             │
+                ▼             ▼             ▼
+        ┌──────────┐  ┌──────────┐  ┌──────────┐
+        │   Bulk   │  │ Details  │  │   List   │
+        │Generation│  │   Page   │  │   Page   │
+        └────┬─────┘  └────┬─────┘  └──────────┘
+             │             │
+             │             │
+  ┌──────────┴─────────────┴──────────────┐
+  │                                        │
+  │  ADD: Preview & Print Options          │
+  │  ┌──────────────────────────────────┐ │
+  │  │ [Preview Vouchers]               │ │
+  │  │                                  │ │
+  │  │ Preview Table (if clicked):      │ │
+  │  │ ┌────────────────────────────┐   │ │
+  │  │ │ Student | Fees | Total     │   │ │
+  │  │ │ Ahmad*  | ...  | 7500      │   │ │
+  │  │ │ Fatima  | ...  | 5500      │   │ │
+  │  │ └────────────────────────────┘   │ │
+  │  │                                  │ │
+  │  │ [Generate & Save]                │ │
+  │  │ [Print Without Saving]           │ │
+  │  └──────────────────────────────────┘ │
+  │                                        │
+  │  Voucher Details:                      │
+  │  ┌──────────────────────────────────┐ │
+  │  │ [Download PDF] [Print] ← NEW     │ │
+  │  └──────────────────────────────────┘ │
+  └────────────────────────────────────────┘
+```
+
+---
+
+## Component Hierarchy
+
+```
+App
+│
+├── StudentManagement
+│   │
+│   ├── StudentAdmissionForm
+│   │   │
+│   │   ├── BasicInfoSection
+│   │   ├── GuardiansSection
+│   │   └── FeeStructureSection ◄─── NEW
+│   │       │
+│   │       ├── ClassDefaultsDisplay
+│   │       ├── CustomFeesToggle
+│   │       └── CustomFeesInputs
+│   │           ├── AdmissionFeeInput
+│   │           ├── MonthlyFeeInput
+│   │           ├── PaperFundInput
+│   │           └── ReasonInput
+│   │
+│   ├── StudentDetailsPage
+│   │   │
+│   │   ├── BasicInfo
+│   │   ├── EnrollmentInfo
+│   │   ├── FeeOverrideSection ◄─── NEW
+│   │   │   │
+│   │   │   ├── FeeOverrideDisplay
+│   │   │   └── FeeOverrideActions
+│   │   │       ├── EditButton
+│   │   │       └── RemoveButton
+│   │   └── GuardiansSection
+│   │
+│   └── StudentListPage
+│
+└── VoucherManagement
+    │
+    ├── BulkVoucherGeneration
+    │   │
+    │   ├── SelectionForm
+    │   │   ├── ClassSelect
+    │   │   ├── SectionSelect
+    │   │   └── MonthPicker
+    │   │
+    │   ├── PreviewSection ◄─── NEW
+    │   │   │
+    │   │   ├── PreviewButton
+    │   │   └── PreviewTable
+    │   │       ├── StudentRow
+    │   │       │   ├── StudentInfo
+    │   │       │   ├── FeeItems
+    │   │       │   └── Total
+    │   │       └── CustomFeeIndicator *
+    │   │
+    │   └── ActionButtons ◄─── UPDATED
+    │       ├── GenerateAndSaveButton
+    │       ├── PrintWithoutSavingButton ◄─── NEW
+    │       └── CancelButton
+    │
+    ├── VoucherDetailsPage
+    │   │
+    │   ├── VoucherInfo
+    │   ├── FeeItemsTable
+    │   └── ActionButtons ◄─── UPDATED
+    │       ├── DownloadPDFButton (existing)
+    │       ├── PrintButton ◄─── NEW
+    │       └── DeleteButton
+    │
+    └── VoucherListPage
+```
+
+---
+
+## API Request/Response Examples
+
+### Set Fee Override
+
+**Request:**
+```http
+POST /api/student-fee-overrides
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "student_id": 1,
+  "class_id": 2,
+  "admission_fee": 4000,
+  "monthly_fee": null,
+  "paper_fund": null,
+  "reason": "Custom fee agreed during admission"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "student_id": 1,
+    "class_id": 2,
+    "admission_fee": 4000,
+    "monthly_fee": null,
+    "paper_fund": null,
+    "reason": "Custom fee agreed during admission",
+    "student_name": "Ahmad Ali",
+    "class_name": "Class 1",
+    "applied_by": 1,
+    "created_at": "2026-02-18T10:30:00.000Z"
+  },
+  "message": "Fee override created successfully"
+}
+```
+
+### Preview Bulk Vouchers
+
+**Request:**
+```http
+POST /api/vouchers/preview-bulk
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "class_id": 2,
+  "month": "2026-02-01"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "total_students": 25,
+      "month": "February 2026"
+    },
+    "vouchers": [
+      {
+        "student_id": 1,
+        "student_name": "Ahmad Ali",
+        "roll_no": "001",
+        "items": [
+          { "item_type": "ADMISSION", "amount": 4000 },
+          { "item_type": "MONTHLY", "amount": 3000 },
+          { "item_type": "PAPER_FUND", "amount": 500 }
+        ],
+        "total_amount": 7500
+      }
+      // ... more students
+    ]
+  },
+  "message": "Bulk voucher preview generated successfully"
+}
+```
+
+---
+
+## State Management Recommendations
+
+### Fee Override State
+
+```javascript
+// In Student Admission Form
+const [feeOverride, setFeeOverride] = useState({
+  enabled: false,
+  admission_fee: null,
+  monthly_fee: null,
+  paper_fund: null,
+  reason: ''
+});
+
+// In Student Details Page
+const [feeOverride, setFeeOverride] = useState(null);
+const [isLoadingOverride, setIsLoadingOverride] = useState(true);
+```
+
+### Voucher Preview State
+
+```javascript
+// In Bulk Voucher Generation
+const [preview, setPreview] = useState(null);
+const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+const [selectedMonth, setSelectedMonth] = useState('');
+const [selectedClass, setSelectedClass] = useState('');
+const [selectedSection, setSelectedSection] = useState('');
+```
+
+---
+
+## Summary
+
+**Key Architecture Points:**
+
+1. **Database**: New `student_fee_overrides` table (one-to-many from students)
+2. **Backend**: 7 new endpoints (4 for overrides, 3 for preview/print)
+3. **Frontend**: 5 main UI areas to update
+4. **Flow**: Override → Preview → Generate → Print
+5. **Logic**: Check override first, fallback to class defaults
+6. **Compatibility**: 100% backward compatible
+
+**Migration Path:**
+
+1. ✅ Database migration completed
+2. ✅ Backend endpoints ready
+3. ⏳ Frontend integration needed
+4. ⏳ Testing required
+5. ⏳ Deployment

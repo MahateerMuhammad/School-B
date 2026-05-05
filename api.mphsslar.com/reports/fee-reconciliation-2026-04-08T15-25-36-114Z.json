@@ -1,0 +1,87 @@
+{
+  "generated_at": "2026-04-08T15:25:35.134Z",
+  "mode": "dry-run",
+  "filters": {
+    "student_id": 1119,
+    "limit": null
+  },
+  "totals": {
+    "students_scanned": 1,
+    "students_with_changes": 1,
+    "students_updated": 0,
+    "students_failed": 0,
+    "inferred_payments_added": 1,
+    "payment_rows_before": 0,
+    "payment_rows_after": 1,
+    "arrears_rows_before": 1,
+    "arrears_rows_after": 0,
+    "total_due_before": 3400,
+    "total_due_after": 1700,
+    "overpayment_preserved": 0
+  },
+  "students": [
+    {
+      "student_id": 1119,
+      "student_name": "Anabia Wajid",
+      "voucher_count": 2,
+      "inferred_payments_added": 1,
+      "changed": true,
+      "payment_changed": true,
+      "arrears_changed": true,
+      "payment_rows_before": 0,
+      "payment_rows_after": 1,
+      "arrears_rows_before": 1,
+      "arrears_rows_after": 0,
+      "total_due_before": 3400,
+      "total_due_after": 1700,
+      "overpayment_preserved": 0,
+      "status_before": {
+        "paid": 0,
+        "partial": 0,
+        "unpaid": 2
+      },
+      "status_after": {
+        "paid": 1,
+        "partial": 0,
+        "unpaid": 1
+      },
+      "vouchers_before": [
+        {
+          "voucher_id": 2184,
+          "month": "2026-02-28",
+          "base_amount": 1700,
+          "paid_amount": 0,
+          "due_amount": 1700,
+          "status": "UNPAID"
+        },
+        {
+          "voucher_id": 2873,
+          "month": "2026-03-31",
+          "base_amount": 1700,
+          "paid_amount": 0,
+          "due_amount": 1700,
+          "status": "UNPAID"
+        }
+      ],
+      "vouchers_after": [
+        {
+          "voucher_id": 2184,
+          "month": "2026-02-28",
+          "base_amount": 1700,
+          "paid_amount": 1700,
+          "due_amount": 0,
+          "status": "PAID"
+        },
+        {
+          "voucher_id": 2873,
+          "month": "2026-03-31",
+          "base_amount": 1700,
+          "paid_amount": 0,
+          "due_amount": 1700,
+          "status": "UNPAID"
+        }
+      ]
+    }
+  ],
+  "failures": []
+}

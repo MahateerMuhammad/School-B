@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-04-08T15:07:58.138Z",
+  "mode": "dry-run",
+  "filters": {
+    "student_id": null,
+    "limit": 1
+  },
+  "totals": {
+    "students_scanned": 1,
+    "students_with_changes": 1,
+    "students_updated": 0,
+    "students_failed": 0,
+    "payment_rows_before": 1,
+    "payment_rows_after": 2,
+    "arrears_rows_before": 1,
+    "arrears_rows_after": 0,
+    "total_due_before": 1300,
+    "total_due_after": 0,
+    "overpayment_preserved": 0
+  },
+  "students": [
+    {
+      "student_id": 635,
+      "student_name": "Syed Shahzain",
+      "voucher_count": 2,
+      "changed": true,
+      "payment_changed": true,
+      "arrears_changed": true,
+      "payment_rows_before": 1,
+      "payment_rows_after": 2,
+      "arrears_rows_before": 1,
+      "arrears_rows_after": 0,
+      "total_due_before": 1300,
+      "total_due_after": 0,
+      "overpayment_preserved": 0,
+      "status_before": {
+        "paid": 1,
+        "partial": 0,
+        "unpaid": 1
+      },
+      "status_after": {
+        "paid": 2,
+        "partial": 0,
+        "unpaid": 0
+      }
+    }
+  ],
+  "failures": []
+}

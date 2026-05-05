@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-04-08T15:27:01.640Z",
+  "mode": "apply",
+  "filters": {
+    "student_id": 1119,
+    "limit": null
+  },
+  "totals": {
+    "students_scanned": 1,
+    "students_with_changes": 1,
+    "students_updated": 1,
+    "students_failed": 0,
+    "inferred_payments_added": 1,
+    "payment_rows_before": 0,
+    "payment_rows_after": 1,
+    "arrears_rows_before": 1,
+    "arrears_rows_after": 0,
+    "total_due_before": 3400,
+    "total_due_after": 1700,
+    "overpayment_preserved": 0
+  },
+  "students": [
+    {
+      "student_id": 1119,
+      "student_name": "Anabia Wajid",
+      "voucher_count": 2,
+      "inferred_payments_added": 1,
+      "changed": true,
+      "payment_changed": true,
+      "arrears_changed": true,
+      "payment_rows_before": 0,
+      "payment_rows_after": 1,
+      "arrears_rows_before": 1,
+      "arrears_rows_after": 0,
+      "total_due_before": 3400,
+      "total_due_after": 1700,
+      "overpayment_preserved": 0,
+      "status_before": {
+        "paid": 0,
+        "partial": 0,
+        "unpaid": 2
+      },
+      "status_after": {
+        "paid": 1,
+        "partial": 0,
+        "unpaid": 1
+      },
+      "apply_result": {
+        "deleted_payments": 0,
+        "inserted_payments": 1,
+        "deleted_arrears": 1,
+        "inserted_arrears": 0
+      }
+    }
+  ],
+  "failures": []
+}
