@@ -2,23 +2,19 @@ services:
   - type: web
     name: school-backend
     env: node
-    runtime: node-18
-    region: singapore
+    region: sgp
     plan: standard
     buildCommand: npm install
     startCommand: node src/server.js
     healthCheckPath: /health
-    healthCheckInterval: 15
-    autoScaleFactor: 5
-    autoScaleMax: 3
-    autoScaleMin: 1
     numInstances: 1
-    maxInstanceCount: 3
     envVars:
+      - key: NODE_VERSION
+        value: "18"
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3000
+        value: "3000"
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
