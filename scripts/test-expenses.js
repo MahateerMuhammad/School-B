@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:3000/api';
+const BASE_URL = 'https://school-b-zk0h.onrender.com/api';
 
 // Test data
 let authToken = '';

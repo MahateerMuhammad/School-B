@@ -6,7 +6,7 @@
 
 const http = require('http');
 
-const API_URL = 'http://localhost:3000';
+const API_URL = 'https://school-b-zk0h.onrender.com';
 let TOKEN = '';
 
 function makeRequest(method, path, data = null, token = null) {

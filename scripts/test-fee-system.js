@@ -10,7 +10,7 @@ const assert = require('assert');
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = 'https://school-b-zk0h.onrender.com/api';
 let authToken = '';
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 

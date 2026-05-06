@@ -23,7 +23,7 @@ async function testBulkImport() {
       ]
     };
 
-    const response = await axios.post('http://localhost:5000/api/students/bulk', testData, {
+    const response = await axios.post('https://school-b-zk0h.onrender.com/api/students/bulk', testData, {
       headers: {
         'Content-Type': 'application/json'
       },

@@ -3,7 +3,7 @@
  * Tests voucher generation, payments, and defaulters tracking
  */
 
-const BASE_URL = 'http://localhost:3000/api';
+const BASE_URL = 'https://school-b-zk0h.onrender.com/api';
 let authToken = '';
 let testStudentId = null;
 let testVoucherId = null;

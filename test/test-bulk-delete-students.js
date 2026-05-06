@@ -15,7 +15,7 @@ const {
 async function testBulkDeleteStudents() {
   console.log(colors.blue('🧪 Testing Bulk Delete Students Endpoint\n'));
 
-  const baseUrl = 'http://localhost:5000/api/students';
+  const baseUrl = 'https://school-b-zk0h.onrender.com/api/students';
   
   // Test cases
   const testCases = [

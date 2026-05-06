@@ -9,7 +9,7 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
     console.log('Testing Students API Endpoint...\n');
     
     // Get a valid auth token first
-    const loginResponse = await fetch('http://localhost:5000/api/auth/login', {
+    const loginResponse = await fetch('https://school-b-zk0h.onrender.com/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -30,7 +30,7 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
     
     // Test 1: Get all students (no filter)
     console.log('--- Test 1: Get all students ---');
-    const allStudentsResponse = await fetch('http://localhost:5000/api/students', {
+    const allStudentsResponse = await fetch('https://school-b-zk0h.onrender.com/api/students', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     
@@ -50,7 +50,7 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
     
     // Test 2: Get students for Nursery (class_id=51)
     console.log('--- Test 2: Get students for Nursery (class_id=51) ---');
-    const nurseryResponse = await fetch('http://localhost:5000/api/students?class_id=51', {
+    const nurseryResponse = await fetch('https://school-b-zk0h.onrender.com/api/students?class_id=51', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     
@@ -72,7 +72,7 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
     
     // Test 3: Get students with section filter
     console.log('--- Test 3: Get students for Nursery Section A ---');
-    const sectionResponse = await fetch('http://localhost:5000/api/students?class_id=51&section_id=53', {
+    const sectionResponse = await fetch('https://school-b-zk0h.onrender.com/api/students?class_id=51&section_id=53', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     

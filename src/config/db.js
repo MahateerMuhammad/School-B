@@ -1,6 +1,15 @@
 const { Pool } = require('pg');
 const config = require('./env');
 
+// Log the database URL for debugging
+console.log(`[DB] Attempting to connect to database.`);
+console.log(`[DB] Connection URL from env.js: ${config.databaseUrl ? 'Loaded' : 'Not found!'}`);
+if (config.databaseUrl) {
+  // To avoid logging the full sensitive URL, just log a part of it.
+  console.log(`[DB] DATABASE_URL starts with: ${config.databaseUrl.substring(0, 50)}...`);
+}
+
+
 const pool = new Pool({
   connectionString: config.databaseUrl,
   ssl: {
