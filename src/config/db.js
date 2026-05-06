@@ -15,7 +15,7 @@ const pool = new Pool({
   ssl: {
     rejectUnauthorized: false
   },
-  family: 4, // Force IPv4 to prevent ENETUNREACH on platforms like Render without IPv6 output
+  // Removed family: 4 since Supabase dropped IPv4 support on the direct DB host
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
