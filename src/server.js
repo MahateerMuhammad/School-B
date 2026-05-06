@@ -1,3 +1,6 @@
+const dns = require("dns");
+dns.setDefaultResultOrder("ipv4first");
+
 const app = require('./app');
 const config = require('./config/env');
 const pool = require('./config/db');
