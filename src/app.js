@@ -54,6 +54,9 @@ if (frontendDistDir) {
 app.use(helmet());
 app.use(cors());
 
+// Trust the reverse proxy (Render) to populate req.ip correctly
+app.set('trust proxy', 1);
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
