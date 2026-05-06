@@ -17,10 +17,10 @@ async function testBulkUpdate() {
       section_id: 95 // Correct section ID for "Pre 9th"
     };
     
-    console.log('📤 Sending request to:', 'http://localhost:5001/api/students/bulk-update-noauth');
+    console.log('📤 Sending request to:', 'https://school-b-zk0h.onrender.com/api/students/bulk-update-noauth');
     console.log('📋 Request data:', JSON.stringify(testData, null, 2));
     
-    const response = await axios.post('http://localhost:5001/api/students/bulk-update-noauth', testData, {
+    const response = await axios.post('https://school-b-zk0h.onrender.com/api/students/bulk-update-noauth', testData, {
       headers: {
         'Content-Type': 'application/json'
       }

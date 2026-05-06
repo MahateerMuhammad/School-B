@@ -4,7 +4,7 @@
 
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'https://school-b-zk0h.onrender.com';
 
 async function testClassesAPI() {
   try {

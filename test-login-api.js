@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 async function testLogin() {
-  const BASE_URL = 'http://localhost:5000';
+  const BASE_URL = 'https://school-b-zk0h.onrender.com';
   
   console.log('Testing login with admin@test.com...\n');
   

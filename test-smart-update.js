@@ -22,7 +22,7 @@ async function testSmartUpdate() {
     };
     
     console.log('📤 Sending request with WRONG class_id:', testData1.class_id);
-    const response1 = await axios.post('http://localhost:5001/api/students/bulk-update-noauth', testData1, {
+    const response1 = await axios.post('https://school-b-zk0h.onrender.com/api/students/bulk-update-noauth', testData1, {
       headers: { 'Content-Type': 'application/json' }
     });
     
@@ -52,7 +52,7 @@ async function testSmartUpdate() {
     };
     
     console.log('📤 Sending request WITHOUT class_id');
-    const response2 = await axios.post('http://localhost:5001/api/students/bulk-update-noauth', testData2, {
+    const response2 = await axios.post('https://school-b-zk0h.onrender.com/api/students/bulk-update-noauth', testData2, {
       headers: { 'Content-Type': 'application/json' }
     });
     

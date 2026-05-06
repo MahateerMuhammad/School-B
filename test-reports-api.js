@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 async function testReportsFetch() {
-  const BASE_URL = 'http://localhost:5000';
+  const BASE_URL = 'https://school-b-zk0h.onrender.com';
   
   console.log('Testing fetching test reports...\n');
   

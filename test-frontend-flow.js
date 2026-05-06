@@ -1,5 +1,5 @@
 // Test frontend login flow
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'https://school-b-zk0h.onrender.com';
 const API_LOGIN = '/api/auth/login';
 
 async function testFrontendLogin() {
